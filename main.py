@@ -14,7 +14,7 @@ from   snntorch import surrogate
 
 # from livelossplot import PlotLosses
 
-from models import LCN, LCNSpiking
+from models import LCN, LCNSpiking, LCNSpikingHybrid
 from data   import CopyRedChannel, OffSpikes, RateEncodeData, LatencyEncodeData, CopyEncodeLabels
 from data   import loadData, generateDataloaders, nSteps
 from train  import pipeline, getAtol, testModel
@@ -420,6 +420,31 @@ def firstOrder(device):
 	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_1stOrder_beta0.25')
 
 
+def hybrid(device):
+	sigDir = "training_data/siggraph_data"
+	data, labels = loadData(sigDir, 'Delta')
+
+	# TODO: choose best params from above experiment for rate encoding
+	rate    = RateEncodeData(nSteps, 1.5, 0)
+	dataloaders = generateDataloaders(data, labels, xTransform=rate)
+
+	# TODO: choose best params from above experiment for neuron values
+	m = LCNSpikingHybrid(4, 14400, 2, 15, 2, 5, 0, 0.99, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_1stOrder_beta0.99_hybrid4')
+
+	m = LCNSpikingHybrid(3, 14400, 2, 15, 2, 5, 0, 0.99, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_1stOrder_beta0.99_hybrid3')
+
+	m = LCNSpikingHybrid(2, 14400, 2, 15, 2, 5, 0, 0.99, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_1stOrder_beta0.99_hybrid2')
+
+	m = LCNSpikingHybrid(1, 14400, 2, 15, 2, 5, 0, 0.99, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_1stOrder_beta0.99_hybrid1')
+
 def main():
 
 	print("Starting Training Process")
@@ -504,6 +529,8 @@ def main():
 
 	rateGain(device)
 	firstOrder(device)
+	# TODO: change params based on results of above ^^^
+	hybrid(device)
 
 
 if __name__ == "__main__":

@@ -82,6 +82,7 @@ class LCNSpiking(nn.Module):
 				self.knn_list  = []
 				self.num_layer = num_layer
 				self.use_cuda  = use_cuda
+				self.directOutput = directOutput
 
 				self.alpha = alpha
 				self.beta  = beta
@@ -196,10 +197,10 @@ class LCNSpiking(nn.Module):
 							# print("2", x.shape)
 							del weight, bias, knn
 
-					if not directOutput:
-						angle = self.fc_angle(x)
-					else:
+					if self.directOutput:
 						angle = x
+					else:
+						angle = self.fc_angle(x)
 					# print("out", angle.shape)
 
 				return mem4_rec, spk4_rec, angle
@@ -210,7 +211,7 @@ class LCNSpikingHybrid(nn.Module):
 
       # SNN PART
       self.num_spiking = num_spiking
-      self.snn = LCNSpiking(in_dim, out_dim, K, factor, num_spiking, alpha, beta, use_cuda, spikeGrad, inhibition)
+      self.snn = LCNSpiking(in_dim, out_dim, K, factor, num_spiking, alpha, beta, use_cuda, spikeGrad, inhibition, directOutput=True)
       
       # ANN PART
       self.dtype = torch.FloatTensor
