@@ -18,9 +18,9 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 		highest_val = 0
 
 		for epoch in range(num_epochs):
-			print('Training Model: ', model.__class__.__name__)
+			# print('Training Model: ', model.__class__.__name__)
 			print('Epoch {}/{}'.format(epoch, num_epochs - 1))
-			print('-' * 10)
+			# print('-' * 10)
 			# logs = {}
 
 			# let every epoch go through one training cycle and one validation cycle
@@ -35,7 +35,8 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 				# SELECT PROPER MODE - train or val
 				if phase == 'train':
 					for param_group in optimizer.param_groups:
-						print("LR", param_group['lr'])
+						# print("LR", param_group['lr'])
+						pass
 					model.train()  # Set model to training mode
 				else:
 					model.eval()   # Set model to evaluate mode
@@ -108,7 +109,7 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 						# tune.track.log(mean_accuracy=correct/total)
 
 						if (correct/total) > highest_val:
-							print('Best val till now: ', (correct/total))
+							# print('Best val till now: ', (correct/total))
 							highest_val = (correct/total)
 							# logs['what'] = highest_val
 							best_model = copy.deepcopy(model)
@@ -203,11 +204,16 @@ def getAtol(m, dataloaders, device, encoding=False):
 	m.to(device)
 	m.eval()
 
-	atols = [5e-1, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+	atols = [5e-1, 1e-1, 1e-2, 1e-3, 1e-4]
 
 	for atol in atols:
 		print(atol)
 		outputs = test_model(m, dataloaders, device, atol=atol, encoding=encoding)
+
+def testModel(m, modelPath, dataloaders, device):
+	m.load_state_dict(torch.load(modelPath))
+	print(modelPath)
+	getAtol(m, dataloaders, device, encoding=True)
 
 
 def main():

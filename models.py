@@ -109,11 +109,11 @@ class LCNSpiking(nn.Module):
 						# self.spike_param[f'{i}'] = lif
 
 				# Spiking Neurons
-				self.lif0 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition) # init_hidden=True, output=True)
-				self.lif1 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition)
-				self.lif2 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition)
-				self.lif3 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition)
-				self.lif4 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition)
+				self.lif0 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract') # init_hidden=True, output=True)
+				self.lif1 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
+				self.lif2 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
+				self.lif3 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
+				self.lif4 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
 			
 				# Make sure dictionary doesn't stop learning
 				self.spike_param = {
@@ -201,6 +201,17 @@ class LCNSpiking(nn.Module):
 
 				return mem4_rec, spk4_rec, angle
 
+# TODO
+"""
+	larger models with more layers
+	
+	make models where there are varying numbers of spiking layers
+		change front and back, spiking and non-spiking
+
+	model that encodes 2 channels
+
+	loss function looks at all timesteps? 
+"""
 
 def main():
 

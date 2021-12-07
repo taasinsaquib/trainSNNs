@@ -14,7 +14,7 @@ seed = 528
 np.random.seed(seed)
 torch.manual_seed(seed)
 
-batchSize = 16
+batchSize = 8
 nSteps = 20
 
 
