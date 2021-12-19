@@ -37,10 +37,10 @@ def normalLCN(device):
 	dataloaders = generateDataloaders(data, labels) 
 
 	model = LCN(14400, 2, 15, 2, 5, True)
-	best, last = pipeline(model, epochs=100, lr=1e-3, weight_decay=0, patience=7, atol=1e-5)
+	best, last = pipeline(model, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, patience=7, atol=1e-2)
 	torch.save(last.state_dict(), './model_dicts/linet_normal_100epoch')
 
-	testModel(model, './model_dicts/linet_normal_100epoch', dataloaders, device)
+	# testModel(model, './model_dicts/linet_normal_100epoch', dataloaders, device)
 	# atol  1e-5 1e-4 1e-3  1e-2  1e-1   0.5
 	#       0    0.04 2.23  61.0  99.4   100
 
@@ -51,12 +51,33 @@ def normalLCN(device):
 
 	model = LCN(14400, 2, 15, 2, 5, True)
 
-	best, last = pipeline(model, epochs=100, lr=1e-3, weight_decay=0, patience=7, atol=1e-5)
+	best, last = pipeline(model,dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, patience=7, atol=1e-2)
 	torch.save(last.state_dict(), './model_dicts/linet_deltaData_100epoch')
 
-	testModel(model, './model_dicts/linet_deltaData_100epoch', dataloaders, device)
+	# testModel(model, './model_dicts/linet_deltaData_100epoch', dataloaders, device)
 	# atol  1e-5 1e-4 1e-3  1e-2  1e-1  0.5
 	#       0    0    0.44  56.7  100   100
+
+
+def numSteps(device):
+
+	# SNN, Rate, nSteps=20, 100 epochs, batchSize=16	
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0.9, 0.8, True)
+	# best, last = pipeline(m, dataloaders, device, epochs=100, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	# torch.save(last.state_dict(), 'linet_spiking_rate_20steps')
+	testModel(model, './model_dicts/linet_spiking_rate_20steps', dataloaders, device)
+	# atol  1e-5 1e-4 1e-3  1e-2  1e-1   0.5
+	#       0    0    0.12  5.4   66.96  99.88
+	
+
+	# SNN, Rate, nSteps=50 , 50 epochs
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0.9, 0.8, True)
+	# best, last = pipeline(m, dataloaders, device, epochs=50, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	# torch.save(last.state_dict(), './model_dicts/linet_spiking_rate_50steps_10epochs')
+	testModel(model, './model_dicts/linet_spiking_rate_50steps_10epochs', dataloaders, device)
+	# epoch/atol  1e-5 1e-4 1e-3  1e-2  1e-1   0.5
+	# 10          0    0    0.12  5.4   66.96  99.88
+	# 50          0    0    0     6.3   64.44  99.96
 
 
 def offSpikes(device):
@@ -420,30 +441,120 @@ def firstOrder(device):
 	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_1stOrder_beta0.25')
 
 
-def hybrid(device):
+def hybrid(device, gain, alpha, beta):
 	sigDir = "training_data/siggraph_data"
 	data, labels = loadData(sigDir, 'Delta')
 
 	# TODO: choose best params from above experiment for rate encoding
-	rate    = RateEncodeData(nSteps, 1.5, 0)
+	rate    = RateEncodeData(nSteps, gain, 0)
 	dataloaders = generateDataloaders(data, labels, xTransform=rate)
 
 	# TODO: choose best params from above experiment for neuron values
-	m = LCNSpikingHybrid(4, 14400, 2, 15, 2, 5, 0, 0.99, True)
-	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	m = LCNSpikingHybrid(4, 14400, 2, 15, 2, 5, alpha, beta, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=False, patience=7, atol=1e-2)
 	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_1stOrder_beta0.99_hybrid4')
 
-	m = LCNSpikingHybrid(3, 14400, 2, 15, 2, 5, 0, 0.99, True)
-	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	m = LCNSpikingHybrid(3, 14400, 2, 15, 2, 5, alpha, beta, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=False, patience=7, atol=1e-2)
 	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_1stOrder_beta0.99_hybrid3')
 
-	m = LCNSpikingHybrid(2, 14400, 2, 15, 2, 5, 0, 0.99, True)
-	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	m = LCNSpikingHybrid(2, 14400, 2, 15, 2, 5, alpha, beta, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=False, patience=7, atol=1e-2)
 	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_1stOrder_beta0.99_hybrid2')
 
-	m = LCNSpikingHybrid(1, 14400, 2, 15, 2, 5, 0, 0.99, True)
-	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	m = LCNSpikingHybrid(1, 14400, 2, 15, 2, 5, alpha, beta, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=False, patience=7, atol=1e-2)
 	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_1stOrder_beta0.99_hybrid1')
+
+
+def largerSNN(device):
+
+	sigDir = "training_data/siggraph_data"
+	data, labels = loadData(sigDir, 'Delta')
+
+	spikeLabels = CopyEncodeLabels(nSteps)
+	rate    = RateEncodeData(nSteps, 1.5, 0)
+
+	dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
+
+	m = LCNSpiking(14400, 2, 15, 2, 6, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_layers6_k15_subtract_gain1.5__1stOrder_beta1')
+
+	m = LCNSpiking(14400, 2, 15, 2, 7, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_layers7_k15_subtract_gain1.5__1stOrder_beta1')
+
+	m = LCNSpiking(14400, 2, 15, 2, 8, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_layers8_k15_subtract_gain1.5__1stOrder_beta1')
+
+
+def rateGainLarge(device):
+
+	sigDir = "training_data/siggraph_data"
+	data, labels = loadData(sigDir, 'Delta')
+
+	spikeLabels = CopyEncodeLabels(nSteps)
+
+	
+	rate    = RateEncodeData(nSteps, 2, 0)
+	dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=50, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_gain2')
+	# m.load_state_dict(torch.load('./model_dicts/snn_k15_subtract'))
+	# atol  1e-5 1e-4 1e-3  1e-2  1e-1   0.5
+	      # 0    0    0.08  6     65.88  99.92
+	
+
+	
+	rate    = RateEncodeData(nSteps, 5, 0)
+	dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=50, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_gain5')
+	# m.load_state_dict(torch.load('./model_dicts/snn_k15_subtract'))
+	# atol  1e-5 1e-4 1e-3  1e-2  1e-1   0.5
+	      # 0    0    0.08  6     65.88  99.92
+	
+
+	
+	rate    = RateEncodeData(nSteps, 10, 0)
+	dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=50, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_gain10')
+	# m.load_state_dict(torch.load('./model_dicts/snn_k15_subtract'))
+	# atol  1e-5 1e-4 1e-3  1e-2  1e-1   0.5
+	      # 0    0    0.08  6     65.88  99.92
+	
+
+	
+	rate    = RateEncodeData(nSteps, 20, 0)
+	dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=50, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_gain20')
+	# m.load_state_dict(torch.load('./model_dicts/snn_k15_subtract'))
+	# atol  1e-5 1e-4 1e-3  1e-2  1e-1   0.5
+	      # 0    0    0.08  6     65.88  99.92
+	
+
+	rate    = RateEncodeData(nSteps, 50, 0)
+	dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=50, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_gain50')
+	# m.load_state_dict(torch.load('./model_dicts/snn_k15_subtract_gain1.25'))
+	# atol  1e-5 1e-4 1e-3  1e-2  1e-1   0.5
+	      # 0    0    0.08  6     65.88  99.92
+
 
 def main():
 
@@ -501,37 +612,21 @@ def main():
 	# dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
 
 
-	# SNN, Rate, nSteps=20, 100 epochs, batchSize=16
-	"""
-	m = LCNSpiking(14400, 2, 15, 2, 5, 0.9, 0.8, True)
-	# best, last = pipeline(m, dataloaders, device, epochs=100, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
-	# torch.save(last.state_dict(), 'linet_spiking_rate_20steps')
-
-	m.load_state_dict(torch.load('./model_dicts/linet_spiking_rate_20steps'))
-	getAtol(m, dataloaders, device, encoding=True)
-	# atol  1e-5 1e-4 1e-3  1e-2  1e-1   0.5
-	#       0    0    0.12  5.4   66.96  99.88
-	"""
-
-	"""
-	# SNN, Rate, nSteps=50 , 50 epochs
-
-	m = LCNSpiking(14400, 2, 15, 2, 5, 0.9, 0.8, True)
-	best, last = pipeline(m, dataloaders, device, epochs=50, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
-	torch.save(last.state_dict(), './model_dicts/linet_spiking_rate_50steps_10epochs')
-
-	# m.load_state_dict(torch.load('./model_dicts/linet_spiking_rate_50steps_10epochs'))
-	getAtol(last, dataloaders, device, encoding=True)
-	# epoch/atol  1e-5 1e-4 1e-3  1e-2  1e-1   0.5
-	# 10          0    0    0.12  5.4   66.96  99.88
-	# 50          0    0    0     6.3   64.44  99.96
-	"""
-
-	rateGain(device)
-	firstOrder(device)
+	# rateGain(device)
+	# firstOrder(device)
 	# TODO: change params based on results of above ^^^
-	hybrid(device)
+	# hybrid(device, 1.5, 0, 1)
+
+	# largerSNN(device)
+	# normalLCN(device)
+
+	rateGainLarge(device)
+
+	# try spiking on normal data
+
+	# train spiking for longer (choose the best so far)
 
 
+# envs: exe, snn
 if __name__ == "__main__":
 	main()

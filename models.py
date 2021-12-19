@@ -115,6 +115,9 @@ class LCNSpiking(nn.Module):
 				self.lif2 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
 				self.lif3 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
 				self.lif4 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
+				self.lif5 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
+				self.lif6 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
+				self.lif7 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
 			
 				# Make sure dictionary doesn't stop learning
 				self.spike_param = {
@@ -122,7 +125,10 @@ class LCNSpiking(nn.Module):
 						1: self.lif1, 
 						2: self.lif2, 
 						3: self.lif3, 
-						4: self.lif4, 
+						4: self.lif4,
+						5: self.lif5, 
+						6: self.lif6, 
+						7: self.lif7, 
 				}     
 
 				# Output
@@ -145,13 +151,19 @@ class LCNSpiking(nn.Module):
 				syn2, mem2 = self.lif2.init_synaptic()
 				syn3, mem3 = self.lif3.init_synaptic()
 				syn4, mem4 = self.lif4.init_synaptic()
+				syn5, mem5 = self.lif2.init_synaptic()
+				syn6, mem6 = self.lif3.init_synaptic()
+				syn7, mem7 = self.lif4.init_synaptic()
 
 				synapses = {
 						0: syn0, 
 						1: syn1, 
 						2: syn2, 
 						3: syn3, 
-						4: syn4, 
+						4: syn4,
+						5: syn5, 
+						6: syn6, 
+						7: syn7, 
 				}
 
 				membranes = {
@@ -159,7 +171,10 @@ class LCNSpiking(nn.Module):
 						1: mem1, 
 						2: mem2, 
 						3: mem3, 
-						4: mem4, 
+						4: mem4,
+						5: mem5, 
+						6: mem6, 
+						7: mem7, 
 				}
 
 				# TODO: Record the final layer?
@@ -220,7 +235,7 @@ class LCNSpikingHybrid(nn.Module):
       self.num_layer = num_layer
       self.use_cuda = use_cuda
     
-      dim = in_dim / (factor ** nSpiking)
+      dim = in_dim / (factor ** self.num_spiking)
 
       # Initialize weight, bias, spiking neurons, and KNN data
       for i in range(num_spiking, num_layer):
@@ -249,8 +264,6 @@ class LCNSpikingHybrid(nn.Module):
     # SNN PART
     _, _, x = self.snn(x)
 
-    print(x.size())
-
     # ANN PART
     for i in range(0, self.num_layer-self.num_spiking):
         # print(len(self.weight_param), len(self.bias_param), len(self.knn_list))
@@ -273,7 +286,6 @@ class LCNSpikingHybrid(nn.Module):
         del weight, bias, knn
 
     angle = self.fc_angle(x)
-    print(angle.size())
     # classification = self.fc_class(x)
     return angle
 
