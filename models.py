@@ -290,6 +290,25 @@ class LCNSpikingHybrid(nn.Module):
     return angle
 
 
+class ShallowNN(nn.Module):
+		def __init__(self, in_dim):
+				super(ShallowNN, self).__init__()
+
+				self.fc1 = nn.Linear(in_dim, 2000)
+				self.fc2 = nn.Linear(1000, 1)
+
+		def forward(self, input):
+			x = input
+
+			x = self.fc1(x)
+			x = torch.relu(x)
+
+			x = self.fc2(x)
+
+			return x
+
+
+
 # TODO
 """
 	larger models with more layers
@@ -307,6 +326,8 @@ def main():
 	linet          = LCN(14400, 2, 15, 2, 5, True)
 	spiking_linet  = LCNSpiking(14400, 2, 15, 2, 5, 0.9, 0.8, True)
 	spiking_hybrid = LCNSpiking4L(4, 14400, 2, 15, 2, 5, 0, 0.25, True)
+
+	pupilNN = ShallowNN(14400)
 
 if __name__ == "__main__":
 	main()

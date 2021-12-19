@@ -100,11 +100,14 @@ class CopyEncodeLabels():
 # *******************************************
 # Data Functions
 
-def loadData(dir, name=''):
+def loadData(dir, name='', eyePart='foveation'):
 	data   = np.load(f'./{dir}/data{name}.npy',   mmap_mode='r+')
 	labels = np.load(f'./{dir}/labels{name}.npy', mmap_mode='r+')  # TODO: turn into degrees or keep radians?
 
-	print(data.shape, labels.shape)
+	print(f'Data shape: {data.shape}, Labels shape: {labels.shape}')
+
+	subtractMean(labels, eyePart)
+	normalization(labels, eyePart)
 
 	return data, labels
 
@@ -162,6 +165,28 @@ def generateDataloaders(data, labels, xTransform=None, yTransform=None, numWorke
 	}
 
 	return dataloaders
+
+
+# *******************************************
+# Mean and Std Dev of labels
+
+def subtractMean(input, eyePart):
+    meanValue = np.mean(input, axis=0)
+    input -= np.mean(input,axis = 0)
+    
+    np.savetxt("./stats/mean" + eyePart + ".csv", meanValue, delimiter=",")
+
+    return input
+
+# Nomralization by dividing the standard variation
+def normalization(input, eyePart):
+    stdValue =np.std(input, axis = 0)
+    input /= stdValue
+
+    np.savetxt("./stats/std" + eyePart + ".csv", stdValue, delimiter=",")
+    
+    return input
+
 
 
 def main():

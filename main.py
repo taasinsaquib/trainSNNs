@@ -556,6 +556,13 @@ def rateGainLarge(device):
 	      # 0    0    0.08  6     65.88  99.92
 
 
+def trainPupil():
+	pass
+
+def trainLens():
+	pass
+
+
 def main():
 
 	print("Starting Training Process")
