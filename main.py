@@ -445,6 +445,13 @@ def hybrid(device):
 	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
 	torch.save(last.state_dict(), './model_dicts/snn_k15_subtract_1stOrder_beta0.99_hybrid1')
 
+
+def trainPupil():
+	pass
+
+def trainLens():
+	pass
+
 def main():
 
 	print("Starting Training Process")
