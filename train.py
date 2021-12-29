@@ -2,9 +2,12 @@ import time
 import copy
 
 import torch
+from   torch.cuda.amp import autocast, GradScaler
 import torch.nn as nn
 from   torch.utils.tensorboard  import SummaryWriter
 from   torch.optim.lr_scheduler import ReduceLROnPlateau
+
+from data import nSteps
 
 # *******************************************
 # Training Helpers
@@ -13,6 +16,8 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 		# for each epoch... 
 		# liveloss = PlotLosses()
 		writer = SummaryWriter()
+
+		scaler = GradScaler()
 
 		best_model = None
 		highest_val = 0
@@ -43,14 +48,14 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 				
 				for inputs, labels in dataloaders[phase]:
 
-					if encoding == True:
-						labels = labels.permute((1, 0, 2))
+					# if encoding == True:
+						# labels = labels.permute((1, 0, 2))
 
 					inputs = inputs.float()
 					labels = labels.float()
 
 					inputs = inputs.to(device)
-					labels = labels.to(device)
+					labels = labels.to(device) 
 
 					batch_idx += 1
 					
@@ -61,15 +66,21 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 						#    which makes sense since the model is in evaluation mode and we 
 						#    don't want to track gradients for validation)  
 
+						# with autocast():
 						if encoding == True:
 							mem, spikes, outputs = model(inputs)
+
+							"""
+							loss = 0
+							nStepBackprop = 1
+							for i in range(0, nStepBackprop):
+								loss += loss_fn(outputs[i], labels)
+							loss /= nSteps
+							# loss = loss.cpu().detach().numpy()
+							"""
+							loss = loss_fn(outputs, labels)
 						else:
 							outputs = model(inputs)
-
-						# compute loss where the loss function will be defined later
-						if encoding == True:
-							loss = loss_fn(outputs, labels[-1])
-						else:
 							loss = loss_fn(outputs, labels)
 
 						# backward + optimize only if in training phase
@@ -77,13 +88,15 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 							loss.backward()
 							optimizer.step()
 
+							# scaler.scale(loss).backward()
+							# scaler.step(optimizer)
+							# scaler.update()
+
 						train_loss += loss
 
 						if encoding == True:
-							# print(outputs.size(), labels.size())
-							# print(outputs, labels)
-							# c, t = numVectorsMatch(outputs[-1], labels[-1], 0, atol)
-							c, t = numVectorsMatch(outputs, labels[-1], 0, atol)
+							c, t = numVectorsMatch(outputs, labels, 0, atol)
+							# c, t = numVectorsMatch(outputs[-1], labels, 0, atol)
 						else:
 							c, t = numVectorsMatch(outputs, labels, 0, atol)
 

@@ -1,12 +1,12 @@
-# import numpy as np
-# import matplotlib.pyplot as plt
+import numpy  as np
+import pandas as pd
 
 import torch
 from   torchvision import transforms
 
 import torch.nn as nn
 import snntorch as snn
-import numpy as np
+
 # from   snntorch import spikegen
 # from   snntorch import backprop
 from   snntorch import surrogate
@@ -14,9 +14,9 @@ from   snntorch import surrogate
 
 # from livelossplot import PlotLosses
 
-from models import LCN, LCNSpiking, LCNSpikingHybrid
+from models import LCN, LCNSpiking, LCNSpikingHybrid, ShallowNN
 from data   import CopyRedChannel, OffSpikes, RateEncodeData, LatencyEncodeData, CopyEncodeLabels
-from data   import loadData, generateDataloaders, nSteps
+from data   import loadData, generateDataloaders, nSteps, subtractMean, normalization
 from train  import pipeline, getAtol, testModel
 
 # *******************************************
@@ -490,6 +490,17 @@ def largerSNN(device):
 	torch.save(last.state_dict(), './model_dicts/snn_layers8_k15_subtract_gain1.5__1stOrder_beta1')
 
 
+def verifyGain2(device):
+	sigDir = "training_data/siggraph_data"
+	data, labels = loadData(sigDir, 'Delta')
+	# spikeLabels = CopyEncodeLabels(nSteps)
+	rate    = RateEncodeData(nSteps, 2, 0)
+	dataloaders = generateDataloaders(data, labels, xTransform=rate)
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=200, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_verify_gain2_diffLoss')
+
 def rateGainLarge(device):
 
 	sigDir = "training_data/siggraph_data"
@@ -555,12 +566,113 @@ def rateGainLarge(device):
 	# atol  1e-5 1e-4 1e-3  1e-2  1e-1   0.5
 	      # 0    0    0.08  6     65.88  99.92
 
+def largeNumEpochsGain2(device):
 
-def trainPupil():
-	pass
+	sigDir = "training_data/siggraph_data"
+	rate    = RateEncodeData(nSteps, 2, 0)
+	spikeLabels = CopyEncodeLabels(nSteps)
+
+	# Normal ONV, 50 epochs
+
+
+	"""
+	data, labels = loadData(sigDir)
+	dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=50, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_best1_k15_subtract_gain2_regular')
+	"""
+
+	# Delta Data, 200 epochs
+	data, labels = loadData(sigDir, 'Delta')
+	dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=200, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_best1_k15_subtract_gain2_delta_200epoch')
+
+def sweepAlpha(device):
+	sigDir = "training_data/siggraph_data"
+
+	# Normal ONV, 50 epochs
+	data, labels = loadData(sigDir, "Delta")
+	rate    = RateEncodeData(nSteps, 2, 0)
+	spikeLabels = CopyEncodeLabels(nSteps)
+	dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_sweepAlpha_0')
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0.25, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_sweepAlpha_0.25')
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0.5, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_sweepAlpha_0.5')
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0.75, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_sweepAlpha_0.75')
+
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0.75, 1, True)
+	best, last = pipeline(m, dataloaders, device, epochs=30, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/snn_sweepAlpha_1')
+
+
+def testWithSmallAmountOfData(device):
+
+	print('\n')
+	# Change Spiking Loss Calculation
+	sigDir = "training_data/siggraph_data"
+
+	# Normal ONV, 50 epochs
+	data, labels = loadData(sigDir, "Delta")
+	rate    = RateEncodeData(nSteps, 2, 0)
+	# spikeLabels = CopyEncodeLabels(nSteps)
+	# dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
+
+	#  test model
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0, 1, True)
+	m.to(torch.float)
+	m.to(device)
+
+	d = data[0:20]
+	l = labels[0:20]
+
+	dataloaders = generateDataloaders(d, l, xTransform=rate)
+	best, last = pipeline(m, dataloaders, device, epochs=50, lr=1e-3, weight_decay=0, encoding=True, patience=7, atol=1e-2)
+
+
+# TODO: get pipeline working with a small amount of data
+def trainPupil(device): 
+
+	npyDir = './training_data/pupil'
+	data   = np.load(f'./{npyDir}/data.npy',   mmap_mode='r+')
+	labels = np.load(f'./{npyDir}/labels.npy', mmap_mode='r+')
+
+	subtractMean(labels, 'Pupil')
+	normalization(labels, 'Pupil')
+
+	rate    = RateEncodeData(nSteps, 2, 0)
+	spikeLabels = CopyEncodeLabels(nSteps)
+	dataloaders = generateDataloaders(data.values, labels, xTransform=rate, yTransform=spikeLabels)
+
+	m = ShallowNN(14401)
+	best, last = pipeline(m, dataloaders, device, epochs=500, lr=1e-3, weight_decay=0, patience=7, atol=1e-2)
+	torch.save(last.state_dict(), './model_dicts/pupil/pupil_0')
+
 
 def trainLens():
-	pass
+	sigDir = "training_data/siggraph_data"
+
+	# Normal ONV, 50 epochs
+	data, labels = loadData(sigDir, eyePart='Lens')
+	rate    = RateEncodeData(nSteps, 2, 0)
+	spikeLabels = CopyEncodeLabels(nSteps)
+	dataloaders = generateDataloaders(data, labels, xTransform=rate, yTransform=spikeLabels)
 
 
 def main():
@@ -573,24 +685,24 @@ def main():
 	# *******************************************
 	# Dataloaders
 
-	copyRed = CopyRedChannel()
+	# copyRed = CopyRedChannel()
 
 	# SNN data
-	offSpikes = OffSpikes()
+	# offSpikes = OffSpikes()
 
-	rate    = RateEncodeData(nSteps, 1, 0)
-	latency = LatencyEncodeData(nSteps, 5, 0.01)
+	# rate    = RateEncodeData(nSteps, 1, 0)
+	# latency = LatencyEncodeData(nSteps, 5, 0.01)
 
 	# SNN labels
-	spikeLabels = CopyEncodeLabels(nSteps)
+	# spikeLabels = CopyEncodeLabels(nSteps)
 
-	offRate    = transforms.Compose([offSpikes, rate])
-	offLatency = transforms.Compose([offSpikes, latency])
+	# offRate    = transforms.Compose([offSpikes, rate])
+	# offLatency = transforms.Compose([offSpikes, latency])
 
-	sigDir = "training_data/siggraph_data"
+	# sigDir = "training_data/siggraph_data"
 	
 	# data, labels = loadData(sigDir)
-	data, labels = loadData(sigDir, 'Delta')
+	# data, labels = loadData(sigDir, 'Delta')
 
 	# data, labels = scaleDownData(data, labels, 0.02)
 
@@ -627,13 +739,35 @@ def main():
 	# largerSNN(device)
 	# normalLCN(device)
 
-	rateGainLarge(device)
+	# rateGainLarge(device)
 
 	# try spiking on normal data
-
 	# train spiking for longer (choose the best so far)
+	# largeNumEpochsGain2(device)
+
+	# done
+	# sweepAlpha(device)
+
+	# largeNumEpochsGain2(device)
+
+	# wasn't verified
+	# verifyGain2(device)
+
+
+
+
+	# With New Loss Calculation (runs out of memory)
+	# verifyGain2(device)
+
+	# TODO: collect good data?
+	# trainPupil(device)
 
 
 # envs: exe, snn
 if __name__ == "__main__":
 	main()
+
+
+
+# TODO: see loss calculation
+# stack positive and negative change on top of each other, like RGB

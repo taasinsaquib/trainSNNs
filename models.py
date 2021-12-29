@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 import snntorch as snn
 
-from data import nSteps
+from data import nSteps, batchSize
 
 class LCN(nn.Module):
 		def __init__(self, in_dim, out_dim, K, factor, num_layer, use_cuda=True):
@@ -110,14 +110,14 @@ class LCNSpiking(nn.Module):
 						# self.spike_param[f'{i}'] = lif
 
 				# Spiking Neurons
-				self.lif0 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract') # init_hidden=True, output=True)
-				self.lif1 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
-				self.lif2 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
-				self.lif3 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
-				self.lif4 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
-				self.lif5 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
-				self.lif6 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
-				self.lif7 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract')
+				self.lif0 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract') # , init_hidden=True, output=True)
+				self.lif1 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract') # , init_hidden=True, output=True)
+				self.lif2 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract') # , init_hidden=True, output=True)
+				self.lif3 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract') # , init_hidden=True, output=True)
+				self.lif4 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract') # , init_hidden=True, output=True)
+				self.lif5 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract') # , init_hidden=True, output=True)
+				self.lif6 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract') # , init_hidden=True, output=True)
+				self.lif7 = snn.Synaptic(alpha=alpha, beta=beta, spike_grad=spikeGrad, inhibition=inhibition, reset_mechanism='subtract') # , init_hidden=True, output=True)
 			
 				# Make sure dictionary doesn't stop learning
 				self.spike_param = {
@@ -133,6 +133,8 @@ class LCNSpiking(nn.Module):
 
 				# Output
 				self.fc_angle = nn.Linear(dim, out_dim)
+
+				self.nStepBackprop = 20
 
 
 		def forward(self, input):
@@ -151,9 +153,9 @@ class LCNSpiking(nn.Module):
 				syn2, mem2 = self.lif2.init_synaptic()
 				syn3, mem3 = self.lif3.init_synaptic()
 				syn4, mem4 = self.lif4.init_synaptic()
-				syn5, mem5 = self.lif2.init_synaptic()
-				syn6, mem6 = self.lif3.init_synaptic()
-				syn7, mem7 = self.lif4.init_synaptic()
+				syn5, mem5 = self.lif5.init_synaptic()
+				syn6, mem6 = self.lif6.init_synaptic()
+				syn7, mem7 = self.lif7.init_synaptic()
 
 				synapses = {
 						0: syn0, 
@@ -183,9 +185,10 @@ class LCNSpiking(nn.Module):
 
 				batch_size = input.shape[0]
 
-				input = input.permute(1, 0, 2)  # (nSteps, batch, data)
-				x     = None
-				angle = None
+				input  = input.permute(1, 0, 2)  # (nSteps, batch, data)
+				x      = None
+				# angles = torch.zeros((self.nStepBackprop, batch_size, 2)).cuda()	# add if-else statement for cpu training)
+				angles = None
 
 				for step in range(nSteps):
 					x = input[step]    
@@ -218,7 +221,14 @@ class LCNSpiking(nn.Module):
 						angle = self.fc_angle(x)
 					# print("out", angle.shape)
 
-				return mem4_rec, spk4_rec, angle
+					"""
+					j = nSteps - self.nStepBackprop 
+					if j >= 0:
+						angles[j] = angle
+					"""
+					angles = angle
+
+				return mem4_rec, spk4_rec, angles
 
 class LCNSpikingHybrid(nn.Module):
   def __init__(self, num_spiking, in_dim, out_dim, K, factor, num_layer, alpha, beta, use_cuda=True, spikeGrad=None, inhibition=False):
@@ -295,7 +305,8 @@ class ShallowNN(nn.Module):
 				super(ShallowNN, self).__init__()
 
 				self.fc1 = nn.Linear(in_dim, 2000)
-				self.fc2 = nn.Linear(1000, 1)
+				self.fc2 = nn.Linear(2000, 1000)
+				self.fc3 = nn.Linear(1000, 1)
 
 		def forward(self, input):
 			x = input
@@ -304,6 +315,9 @@ class ShallowNN(nn.Module):
 			x = torch.relu(x)
 
 			x = self.fc2(x)
+			x = torch.relu(x)
+
+			x = self.fc3(x)
 
 			return x
 
@@ -328,6 +342,39 @@ def main():
 	spiking_hybrid = LCNSpiking4L(4, 14400, 2, 15, 2, 5, 0, 0.25, True)
 
 	pupilNN = ShallowNN(14400)
+
+	#  test model
+	m = LCNSpiking(14400, 2, 15, 2, 5, 0, 1, True)
+	m.to(torch.float)
+	m.to(device)
+
+	d = data[0]
+	l = labels[0]
+
+	d = torch.from_numpy(d).float()
+	l = torch.from_numpy(l).float()
+
+	d = rate(d)
+	d = d[None, :]
+	l = l[None, :]
+
+	print(d.shape, l.shape)
+	print(device)
+
+	d = d.to(device)
+	l = l.to(device)
+
+	_, _, out = m(d)
+
+
+	loss_fn = nn.MSELoss()
+	loss = 0
+	for i in range(0, nSteps):
+		loss += loss_fn(out[i], l)
+	loss /= nSteps
+
+	print(loss.cpu().detach().numpy())
+
 
 if __name__ == "__main__":
 	main()

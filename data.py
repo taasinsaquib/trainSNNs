@@ -1,4 +1,5 @@
-import numpy as np
+import numpy  as np
+import pandas as pd
 
 import torch
 from   torch.utils.data import Dataset, TensorDataset, random_split
@@ -100,7 +101,7 @@ class CopyEncodeLabels():
 # *******************************************
 # Data Functions
 
-def loadData(dir, name='', eyePart='foveation'):
+def loadData(dir, name='', eyePart='Foveation'):
 	data   = np.load(f'./{dir}/data{name}.npy',   mmap_mode='r+')
 	labels = np.load(f'./{dir}/labels{name}.npy', mmap_mode='r+')  # TODO: turn into degrees or keep radians?
 
@@ -171,26 +172,31 @@ def generateDataloaders(data, labels, xTransform=None, yTransform=None, numWorke
 # Mean and Std Dev of labels
 
 def subtractMean(input, eyePart):
-    meanValue = np.mean(input, axis=0)
-    input -= np.mean(input,axis = 0)
-    
-    np.savetxt("./stats/mean" + eyePart + ".csv", meanValue, delimiter=",")
+	meanValue = np.mean(input, axis=0)
+	input -= np.mean(input,axis = 0)
 
-    return input
+	print("Mean", meanValue)
+	
+	np.savetxt("./stats/mean" + eyePart + ".csv", meanValue, delimiter=",")
+
+	return input
 
 # Nomralization by dividing the standard variation
 def normalization(input, eyePart):
-    stdValue =np.std(input, axis = 0)
-    input /= stdValue
+	stdValue =np.std(input, axis = 0)
+	input /= stdValue
 
-    np.savetxt("./stats/std" + eyePart + ".csv", stdValue, delimiter=",")
-    
-    return input
+	print("STD", stdValue)
+
+	np.savetxt("./stats/std" + eyePart + ".csv", stdValue, delimiter=",")
+	
+	return input
 
 
 
 def main():
 
+	"""
 	# sigDir = "training_data/siggraph_data"
 	data, labels = loadData(sigDir)
 	data, labels = scaleDownData(data, labels, 0.02)
@@ -209,6 +215,31 @@ def main():
 
 	offRate    = transforms.Compose([offSpikes, rate])
 	offLatency = transforms.Compose([offSpikes, latency])
+	"""
+
+	"""
+	# Create npy from large csv
+	csvDir = 'C:/Users/taasi/Desktop/biomechanical_eye_siggraph_asia_19/pupilData'
+	npyDir = './training_data/pupil'
+
+	data = pd.read_csv(f'{csvDir}/image_x_act_iris_sphincter.csv', header=None)
+	# data = pd.read_csv(f'{csvDir}/data_smol.csv', header=None)
+	data = data.to_numpy()
+	np.save(f'{npyDir}/data.npy', data)
+
+	# labels = np.genfromtxt(f'{csvDir}/output_iris_sphincter_delta_act.csv', delimiter=',')
+
+	# np.save(f'{npyDir}/data.npy', data)
+	# np.save(f'{npyDir}/labels.npy', labels)
+	"""
+
+	npyDir = './training_data/pupil'
+	labels = np.load(f'./{npyDir}/labels.npy', mmap_mode='r+')
+	labels = labels[:, None]
+	print(labels[:10])
+	subtractMean(labels, 'Pupil')
+	normalization(labels, 'Pupil')
+
 
 
 if __name__ == "__main__":
