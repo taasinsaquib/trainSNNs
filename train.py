@@ -48,9 +48,6 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 				
 				for inputs, labels in dataloaders[phase]:
 
-					# if encoding == True:
-						# labels = labels.permute((1, 0, 2))
-
 					inputs = inputs.float()
 					labels = labels.float()
 
@@ -71,14 +68,18 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 							mem, spikes, outputs = model(inputs)
 
 							"""
+							labels = labels.permute(1, 0, 2)
 							loss = 0
-							nStepBackprop = 1
-							for i in range(0, nStepBackprop):
+							nStepBackprop = 19
+							for i in range(nStepBackprop, nSteps):
 								loss += loss_fn(outputs[i], labels)
 							loss /= nSteps
 							# loss = loss.cpu().detach().numpy()
 							"""
+							# print("hi", outputs.size(), labels.size())
+
 							loss = loss_fn(outputs, labels)
+							loss = loss.cuda()
 						else:
 							outputs = model(inputs)
 							loss = loss_fn(outputs, labels)
@@ -95,7 +96,7 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 						train_loss += loss
 
 						if encoding == True:
-							c, t = numVectorsMatch(outputs, labels, 0, atol)
+							c, t = numVectorsMatch(outputs[-1], labels, 0, atol)
 							# c, t = numVectorsMatch(outputs[-1], labels, 0, atol)
 						else:
 							c, t = numVectorsMatch(outputs, labels, 0, atol)

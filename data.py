@@ -98,6 +98,23 @@ class CopyEncodeLabels():
 		return x
 
 
+# TODO: ON OFF Channels
+class OnOffChannels():
+	def __init__(self, onvDim):
+		self.onvDim = onvDim
+
+	def __call__(self, x):
+		posIdx = np.where(x > 0)
+		negIdx = np.where(x < 0)
+
+		newX = torch.zeros(self.onvDim * 2)
+
+		newX[ :self.onvDim][posIdx] = x[posIdx]
+		newX[self.onvDim: ][negIdx] = x[negIdx] * -1
+
+		return newX
+
+
 # *******************************************
 # Data Functions
 
@@ -126,6 +143,9 @@ def createDeltaOnv(data, labels, dir):
 
 
 def scaleDownData(data, labels, factor=1):
+	if factor == 1:
+		return data, labels
+
 	n = int(data.shape[0] * factor)
 
 	return data[:n], labels[:n]
@@ -239,6 +259,11 @@ def main():
 	print(labels[:10])
 	subtractMean(labels, 'Pupil')
 	normalization(labels, 'Pupil')
+
+
+	onoff = OnOffChannels(10)
+	d = onoff(np.array([-1, 0, 0, 0, 0, 0, 0, 0, 0, 1]))
+	print(d)
 
 
 
