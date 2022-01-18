@@ -1,5 +1,12 @@
 /training_data
+
 /KNN
 /KNN_channel
+
 /model_dicts
+
 /runs
+/runs_FallQ
+/runs_RNN
+
+/verifyModels
