@@ -15,7 +15,7 @@ seed = 528
 np.random.seed(seed)
 torch.manual_seed(seed)
 
-batchSize = 8
+batchSize = 16
 nSteps = 20
 
 
@@ -253,6 +253,7 @@ def main():
 	# np.save(f'{npyDir}/labels.npy', labels)
 	"""
 
+	"""
 	npyDir = './training_data/pupil'
 	labels = np.load(f'./{npyDir}/labels.npy', mmap_mode='r+')
 	labels = labels[:, None]
@@ -264,8 +265,37 @@ def main():
 	onoff = OnOffChannels(10)
 	d = onoff(np.array([-1, 0, 0, 0, 0, 0, 0, 0, 0, 1]))
 	print(d)
+	"""
 
+	import matplotlib.pyplot as plt
+	import time
 
+	# data = np.genfromtxt(f'C:/Users/taasi/Desktop/biomechanical_eye_siggraph_asia_19/perceptionData/image_x.csv', delimiter=',')
+	# print(data.shape)
+
+	# """
+	sigDir = "training_data/siggraph_data"
+	data, labels = loadData(sigDir, "Delta")
+	coord = np.load('./coordinates.npy')
+	# """
+
+	"""
+	plt.ion()
+	figure, ax = plt.subplots(figsize=(10, 8))
+	line1, = ax.plot(coord[:, 0], coord[:, 1], c=np.zeros(14400))
+	"""
+
+	for i in range(0, 10):
+
+		plt.scatter(coord[:, 0], coord[:, 1], marker='.', c=data[i])
+		plt.show()
+
+		"""
+		line1.set_color(data[i])
+		figure.canvas.draw()
+		figure.canvas.flush_events()
+		time.sleep(0.1)
+		"""
 
 if __name__ == "__main__":
 	main()

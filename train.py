@@ -9,8 +9,6 @@ from   torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from data import nSteps
 
-# *******************************************
-# Training Helpers
 
 def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, num_epochs, atol=1):
 		# for each epoch... 
@@ -198,19 +196,26 @@ def numVectorsMatch(outputs, labels, rtol = 0, atol = 0.5):
 
 	return correct, total
 
+
 loss_fn = nn.MSELoss()
 
-def pipeline(model, dataloaders, device, epochs=25, lr=1e-2, weight_decay=0.1, encoding=False, patience=5, atol=1):
+def pipeline(model, dataloaders, device, epochs=25, lr=1e-2, weight_decay=0.1, encoding=False, patience=5, atol=1, saveOpt='', loadOpt=''):
 
 	model.to(torch.float)
 	model.to(device)
 
 	opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)  # TODO: tune betas
+	if loadOpt != '':
+		opt.load_state_dict(torch.load(f'./model_dicts/optimizer/{loadOpt}'))
 	lrSched = ReduceLROnPlateau(opt, patience=patience)
 	
 	best_model, m = train_model(model, dataloaders, device, opt, lrSched, encoding, num_epochs=epochs, atol=atol)
 
+	if saveOpt != '':
+		torch.save(opt.state_dict(), f'./model_dicts/optimizer/{saveOpt}')
+
 	return best_model, m
+
 
 def getAtol(m, dataloaders, device, encoding=False):
 
@@ -229,8 +234,30 @@ def testModel(m, modelPath, dataloaders, device):
 	print(modelPath)
 	getAtol(m, dataloaders, device, encoding=True)
 
+# *****************************************************************************
+# main
+# *****************************************************************************
 
 def main():
+
+	# test cycleThroughModels
+	"""
+	m1 = FC()
+	m2 = FC()
+
+	d = {
+		"m1": m1,
+		"m2": m2
+	}
+
+	sigDir = "training_data/siggraph_data"
+	data, labels = loadData(sigDir)
+	data, labels = scaleDownData(data, labels, 0.001)
+	dataloaders = generateDataloaders(data, labels) 
+
+	cycleThroughModels(device, d, 2, dataloaders)
+	"""
+
 	pass
 
 
