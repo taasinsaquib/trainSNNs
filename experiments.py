@@ -11,10 +11,6 @@ from train  import pipeline
 from snntorch import surrogate
 
 
-# *****************************************************************************
-# Helpers
-# *****************************************************************************
-
 # cycle through a list of given models
 def cycleThroughModels(device, models, nEpochs=1, dataType='', f=1, nSteps=nSteps, loadOpt=''):
 
