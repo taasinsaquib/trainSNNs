@@ -20,4 +20,4 @@ Code to train models for thesis
 
 * convert images to video
 * `C:\Users\taasi\Downloads\ffmpeg-master-latest-win64-gpl\ffmpeg-master-latest-win64-gpl\bin`
-* `ffmpeg.exe -i C:\Users\taasi\Desktop\biomechanical_eye_siggraph_asia_19\dump\image%06d.bmp -vcodec libx264 -crf 25  -pix_fmt yuv420p test.mp4`
+* `ffmpeg.exe -i C:\Users\taasi\Desktop\biomechanical_eye_siggraph_asia_19\dump\image%06d.bmp -vcodec libx264 -crf 25  -pix_fmt yuv420p C:\Users\taasi\trainSNNs\verifyModels\test.mp4`

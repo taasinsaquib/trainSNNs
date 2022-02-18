@@ -74,7 +74,9 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 							loss /= nSteps
 							# loss = loss.cpu().detach().numpy()
 							"""
+							# labels = labels.permute(1, 0, 2)
 							# print("hi", outputs.size(), labels.size())
+							# print(outputs.get_device(), labels.get_device())
 
 							loss = loss_fn(outputs, labels)
 							loss = loss.cuda()

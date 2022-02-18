@@ -23,6 +23,8 @@ from snntoolbox.bin.run import main
 from snntoolbox.utils.utils import import_configparser
 from tests.parsing.models.pytorch import Model
 
+from importlib import import_module
+from snntoolbox.bin.utils import update_setup
 
 # Pytorch to Keras parser needs image_data_format == channel_first.
 backend.set_image_data_format('channels_first')
@@ -182,8 +184,10 @@ shutil.copyfile(source_path, os.path.join(path_wd, model_name + '.py'))
 # RUN SNN TOOLBOX #
 ###################
 
-main(config_filepath)
+# main(config_filepath)
+
 # """
+
 """
 import h5py
 from tests.parsing.models.pytorch import Model
@@ -205,3 +209,76 @@ with h5py.File(filename, "r") as f:
     print(data)
 
 """
+
+# """
+config = update_setup(config_filepath)
+
+queue = None
+
+# Instantiate an empty spiking network
+# target_sim = import_target_sim(config)
+# spiking_model = target_sim.SNN(config, queue)
+
+
+ # __________________________ LOAD MODEL _____________________________ #
+
+model_lib = import_module('snntoolbox.parsing.model_libs.' +
+                          config.get('input', 'model_lib') +
+                          '_input_lib')
+input_model = model_lib.load(config.get('paths', 'path_wd'),
+                             config.get('paths', 'filename_ann'))
+
+
+# ____________________________ PARSE ________________________________ #
+
+print("Parsing input model...")
+model_parser = model_lib.ModelParser(input_model['model'], config)
+model_parser.parse()
+parsed_model = model_parser.build_parsed_model()
+
+
+# ___________________________ NORMALIZE _____________________________ #
+
+if config.getboolean('tools', 'normalize') and not is_stop(queue):
+    normalize_parameters(parsed_model, config, **normset)
+
+# Evaluate parsed model.
+if config.getboolean('tools', 'evaluate_ann') and not is_stop(queue):
+    print("Evaluating parsed model on {} samples...".format(
+        num_to_test))
+    score = model_parser.evaluate(
+        config.getint('simulation', 'batch_size'),
+        num_to_test, **testset)
+    results = [score[1]]
+
+# Write parsed model to disk
+parsed_model.save(str(
+    os.path.join(config.get('paths', 'path_wd'),
+                 config.get('paths', 'filename_parsed_model') +
+                 '.h5')))
+
+
+# _____________________________ CONVERT _________________________________ #
+
+if config.getboolean('tools', 'convert') and not is_stop(queue):
+    if parsed_model is None:
+        try:
+            parsed_model = load(
+                config.get('paths', 'path_wd'),
+                config.get('paths', 'filename_parsed_model'),
+                filepath_custom_objects=config.get(
+                    'paths', 'filepath_custom_objects'))['model']
+        except FileNotFoundError:
+            print("Could not find parsed model {} in path {}. Consider "
+                  "setting `parse = True` in your config file.".format(
+                    config.get('paths', 'path_wd'),
+                    config.get('paths', 'filename_parsed_model')))
+
+    spiking_model.build(parsed_model, **testset)
+
+    # Export network in a format specific to the simulator with which it
+    # will be tested later.
+    spiking_model.save(config.get('paths', 'path_wd'),
+                       config.get('paths', 'filename_snn'))
+
+# """

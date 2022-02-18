@@ -46,7 +46,7 @@ class ONVData(Dataset):
 # copy ONV 3 times because RGB is all the same (white ball)
 class CopyRedChannel():
 	def __call__(self, x):
-		x = np.tile(x, 3)
+		x = x.tile((3,))
 		return x
 
 # if binary changes in color {-1, 0, 1}, assign probabilities to each of the 3 possibilities
@@ -267,35 +267,46 @@ def main():
 	print(d)
 	"""
 
-	import matplotlib.pyplot as plt
-	import time
 
-	# data = np.genfromtxt(f'C:/Users/taasi/Desktop/biomechanical_eye_siggraph_asia_19/perceptionData/image_x.csv', delimiter=',')
-	# print(data.shape)
+	# import matplotlib.pyplot as plt
+	# import time
+
+	# # data = np.genfromtxt(f'C:/Users/taasi/Desktop/biomechanical_eye_siggraph_asia_19/perceptionData/image_x.csv', delimiter=',')
+	# # print(data.shape)
+
+	# # """
+	# sigDir = "training_data/siggraph_data"
+	# data, labels = loadData(sigDir, "Delta")
+	# coord = np.load('./coordinates.npy')
+	# # """
 
 	# """
-	sigDir = "training_data/siggraph_data"
-	data, labels = loadData(sigDir, "Delta")
-	coord = np.load('./coordinates.npy')
+	# plt.ion()
+	# figure, ax = plt.subplots(figsize=(10, 8))
+	# line1, = ax.plot(coord[:, 0], coord[:, 1], c=np.zeros(14400))
 	# """
 
-	"""
-	plt.ion()
-	figure, ax = plt.subplots(figsize=(10, 8))
-	line1, = ax.plot(coord[:, 0], coord[:, 1], c=np.zeros(14400))
-	"""
+	# for i in range(0, 10):
 
-	for i in range(0, 10):
+	# 	plt.scatter(coord[:, 0], coord[:, 1], marker='.', c=data[i])
+	# 	plt.show()
 
-		plt.scatter(coord[:, 0], coord[:, 1], marker='.', c=data[i])
-		plt.show()
+	# 	"""
+	# 	line1.set_color(data[i])
+	# 	figure.canvas.draw()
+	# 	figure.canvas.flush_events()
+	# 	time.sleep(0.1)
+	# 	"""
 
-		"""
-		line1.set_color(data[i])
-		figure.canvas.draw()
-		figure.canvas.flush_events()
-		time.sleep(0.1)
-		"""
+	rgb = CopyRedChannel()
+
+	x = np.ones(10)
+
+	print(x.shape)
+
+	x = rgb(x)
+
+	print(x.shape)	
 
 if __name__ == "__main__":
 	main()
