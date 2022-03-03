@@ -521,7 +521,7 @@ class LCNSpiking2(nn.Module):
 				input  = input.permute(1, 0, 2)  # (nSteps, batch, data)
 				x      = None
 				# angles2 = torch.zeros((nSteps, batch_size, 2)).cuda()	# add if-else statement for cpu training)
-				angles = None
+				# angles = []
 
 				for step in range(nSteps):
 					x = input[step]    
@@ -557,6 +557,7 @@ class LCNSpiking2(nn.Module):
 						angle = x
 					else:
 						angle = self.fc_angle(x)
+						# angles2[step] = angle
 
 					"""
 					j = nSteps - self.nStepBackprop 
@@ -783,6 +784,103 @@ class LCNSpikingHybrid(nn.Module):
 		# classification = self.fc_class(x)
 		return angle
 
+# only have a linear layer at the end of the SNN
+class LCNSpikingHybrid2(nn.Module):
+	def __init__(self, num_spiking, in_dim, out_dim, K, factor, num_layer, alpha, beta, use_cuda=True, spikeGrad=None, inhibition=False):
+			super(LCNSpikingHybrid2, self).__init__()
+
+			# SNN PART
+			self.num_spiking = num_spiking
+			self.snn = LCNSpiking2(in_dim, out_dim, K, factor, num_spiking, alpha, beta, use_cuda, spikeGrad, inhibition, directOutput=True)
+			
+			# ANN PART
+			self.dtype = torch.FloatTensor
+			self.weight_param, self.bias_param = nn.ParameterList(), nn.ParameterList()
+			self.knn_list = []
+			self.num_layer = num_layer
+			self.use_cuda = use_cuda
+		
+			dim = int(in_dim / (factor ** self.num_spiking))
+			self.fc_angle = nn.Linear(dim, out_dim)
+
+	def forward(self, input):
+
+		x = input
+
+		# SNN PART
+		_, _, x = self.snn(x)
+
+		angle = self.fc_angle(x)
+		
+		return angle
+
+
+class LCNSpikingHybrid3(nn.Module):
+	def __init__(self, num_spiking, in_dim, out_dim, K, factor, num_layer, alpha, beta, use_cuda=True, spikeGrad=None, inhibition=False):
+			super(LCNSpikingHybrid3, self).__init__()
+
+			# SNN PART
+			self.num_spiking = num_spiking
+			self.snn = LCNSpiking2(in_dim, out_dim, K, factor, num_spiking, alpha, beta, use_cuda, spikeGrad, inhibition, directOutput=True)
+			
+			# ANN PART
+			self.dtype = torch.FloatTensor
+			self.weight_param, self.bias_param = nn.ParameterList(), nn.ParameterList()
+			self.knn_list = []
+			self.num_layer = num_layer
+			self.use_cuda = use_cuda
+		
+			dim = in_dim / (factor ** self.num_spiking)
+
+			# Initialize weight, bias, spiking neurons, and KNN data
+			for i in range(num_spiking, num_layer):
+					dim = int(math.floor(dim / factor))
+
+					# Weight and bias
+					w = torch.Tensor(dim, K).zero_().type(self.dtype).normal_(0, (2.0 / K) ** 0.5)
+					b = torch.zeros(1, dim).type(self.dtype)
+					self.weight_param.append(torch.nn.Parameter(w, requires_grad=True))
+					self.bias_param.append(torch.nn.Parameter(b, requires_grad=True))
+
+					# KNN
+					h5f = h5py.File('KNN/%d/%d/%d/knn_index_%d.h5' % (in_dim, factor, K, i), 'r')
+					k_nearest = torch.from_numpy(h5f['data'][:]).type(torch.long)
+					h5f.close()
+
+					self.knn_list.append(k_nearest)
+
+			self.fc_angle = nn.Linear(dim, out_dim)
+
+	def forward(self, input):
+
+		x = input
+		batch_size = input.shape[0]
+
+		# SNN PART
+		_, _, x = self.snn(x)
+
+		# ANN PART
+		for i in range(0, self.num_layer-self.num_spiking):
+				# print(len(self.weight_param), len(self.bias_param), len(self.knn_list))
+				if self.use_cuda:
+						weight, bias, knn = self.weight_param[i], self.bias_param[i], self.knn_list[i].cuda()
+				else:
+						weight, bias, knn = self.weight_param[i], self.bias_param[i], self.knn_list[i]
+
+				x = x.unsqueeze(1).expand(-1, weight.shape[0], -1)
+
+				knn = knn.unsqueeze(0).expand(batch_size, -1, -1)
+
+				x = torch.gather(x, 2, knn)
+
+				x = x * weight.unsqueeze(0).expand(batch_size, -1, -1)
+				x = torch.sum(x, 2) + bias
+
+				del weight, bias, knn
+
+		angle = self.fc_angle(x)
+
+		return angle
 
 # *****************************************************************************
 # Other

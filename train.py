@@ -38,8 +38,7 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 				# SELECT PROPER MODE - train or val
 				if phase == 'train':
 					for param_group in optimizer.param_groups:
-						# print("LR", param_group['lr'])
-						pass
+						print(param_group['lr'])
 					model.train()  # Set model to training mode
 				else:
 					model.eval()   # Set model to evaluate mode
@@ -74,7 +73,7 @@ def train_model(model, dataloaders, device, optimizer, lrScheduler, encoding, nu
 							loss /= nSteps
 							# loss = loss.cpu().detach().numpy()
 							"""
-							# labels = labels.permute(1, 0, 2)
+							labels = labels.permute(1, 0, 2)
 							# print("hi", outputs.size(), labels.size())
 							# print(outputs.get_device(), labels.get_device())
 
@@ -209,7 +208,7 @@ def pipeline(model, dataloaders, device, epochs=25, lr=1e-2, weight_decay=0.1, e
 	opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)  # TODO: tune betas
 	if loadOpt != '':
 		opt.load_state_dict(torch.load(f'./model_dicts/optimizer/{loadOpt}'))
-	lrSched = ReduceLROnPlateau(opt, patience=patience)
+	lrSched = ReduceLROnPlateau(opt, patience=patience, min_lr=1e-5)
 	
 	best_model, m = train_model(model, dataloaders, device, opt, lrSched, encoding, num_epochs=epochs, atol=atol)
 

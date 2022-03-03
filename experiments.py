@@ -4,7 +4,7 @@ from   torchvision import transforms
 from data   import loadData, generateDataloaders, scaleDownData, nSteps
 from data   import RateEncodeData, LatencyEncodeData, CopyEncodeLabels, OnOffChannels, CopyRedChannel
 from models import FC,  FCSpiking,  FCnoBias
-from models import LCN, LCNSpiking, LCNnoBias, LCNSpikingHybrid, LCNChannelStack
+from models import LCN, LCNSpiking, LCNnoBias, LCNSpikingHybrid, LCNSpikingHybrid2, LCNSpikingHybrid3, LCNChannelStack
 from models import Model, LCNSpiking2
 from train  import pipeline
 
@@ -920,26 +920,89 @@ def main():
 
 
 	# Ex 35: RGB LCNSpiking2 **************************************************
-
+	"""
 	models = {
-		'ex35_LCNSpikingHybrid_spiking_normal_10epoch_k25_L1_surrogate_fastSigmoid': LCNSpikingHybrid(1, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
-		'ex35_LCNSpikingHybrid_spiking_normal_10epoch_k25_L2_surrogate_fastSigmoid': LCNSpikingHybrid(2, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
-		'ex35_LCNSpikingHybrid_spiking_normal_10epoch_k25_L3_surrogate_fastSigmoid': LCNSpikingHybrid(3, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
-		'ex35_LCNSpikingHybrid_spiking_normal_10epoch_k25_L4_surrogate_fastSigmoid': LCNSpikingHybrid(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex35_LCNSpikingHybrid_spiking_normal_100epoch_k25_L1_surrogate_fastSigmoid': LCNSpikingHybrid(1, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex35_LCNSpikingHybrid_spiking_normal_100epoch_k25_L2_surrogate_fastSigmoid': LCNSpikingHybrid(2, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex35_LCNSpikingHybrid_spiking_normal_100epoch_k25_L3_surrogate_fastSigmoid': LCNSpikingHybrid(3, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex35_LCNSpikingHybrid_spiking_normal_100epoch_k25_L4_surrogate_fastSigmoid': LCNSpikingHybrid(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
 		'ex35_LCNSpiking_spikes_normal_100epoch_k25_surrogate_fastSigmoid':          LCNSpiking2(43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
 	}
 
-	cycleThroughModels(device, models, nEpochs=10)
+	cycleThroughModels(device, models, nEpochs=100)
 
 	models = {
-		'ex35_LCNSpikingHybrid_spiking_delta_10epoch_k25_L1_surrogate_fastSigmoid': LCNSpikingHybrid(1, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
-		'ex35_LCNSpikingHybrid_spiking_delta_10epoch_k25_L2_surrogate_fastSigmoid': LCNSpikingHybrid(2, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
-		'ex35_LCNSpikingHybrid_spiking_delta_10epoch_k25_L3_surrogate_fastSigmoid': LCNSpikingHybrid(3, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
-		'ex35_LCNSpikingHybrid_spiking_delta_10epoch_k25_L4_surrogate_fastSigmoid': LCNSpikingHybrid(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex35_LCNSpikingHybrid_spiking_delta_100epoch_k25_L1_surrogate_fastSigmoid': LCNSpikingHybrid(1, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex35_LCNSpikingHybrid_spiking_delta_100epoch_k25_L2_surrogate_fastSigmoid': LCNSpikingHybrid(2, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex35_LCNSpikingHybrid_spiking_delta_100epoch_k25_L3_surrogate_fastSigmoid': LCNSpikingHybrid(3, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex35_LCNSpikingHybrid_spiking_delta_100epoch_k25_L4_surrogate_fastSigmoid': LCNSpikingHybrid(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
 		'ex35_LCNSpiking_spikes_delta_10epoch_k25_surrogate_fastSigmoid':           LCNSpiking2(43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
 	}
-	cycleThroughModels(device, models, nEpochs=10, dataType='Delta')
+	cycleThroughModels(device, models, nEpochs=100, dataType='Delta')
+	"""
+	# *************************************************************************
 
+
+	# Ex 36: No ANN in Hybrid *************************************************
+	"""
+	models = {
+		# 'ex36_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L1_surrogate_fastSigmoid': LCNSpikingHybrid2(1, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		# 'ex36_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L2_surrogate_fastSigmoid': LCNSpikingHybrid2(2, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		# 'ex36_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L3_surrogate_fastSigmoid': LCNSpikingHybrid2(3, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		# 'ex36_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L4_surrogate_fastSigmoid': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		# 'ex36_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L5_surrogate_fastSigmoid': LCNSpikingHybrid2(5, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+	}
+	cycleThroughModels(device, models, nEpochs=100)
+
+	models = {
+		# 'ex36_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L1_surrogate_fastSigmoid': LCNSpikingHybrid2(1, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		# 'ex36_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L2_surrogate_fastSigmoid': LCNSpikingHybrid2(2, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		# 'ex36_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L3_surrogate_fastSigmoid': LCNSpikingHybrid2(3, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		# 'ex36_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L4_surrogate_fastSigmoid': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		# 'ex36_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L5_surrogate_fastSigmoid': LCNSpikingHybrid2(5, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+	}
+	cycleThroughModels(device, models, nEpochs=100, dataType='Delta')
+
+	# lr scheduling
+	models = {
+		'ex36_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L4_surrogate_fastSigmoid_LR': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+	}
+	cycleThroughModels(device, models, nEpochs=100)
+
+	# lr scheduling
+	models = {
+		'ex36_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L4_surrogate_fastSigmoid_LR': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+	}
+	cycleThroughModels(device, models, nEpochs=100, dataType='Delta')
+	"""
+	# *************************************************************************
+
+	# Ex 37: Linear Transform at End ******************************************
+	# """
+	models = {
+		# 'ex37_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L3_surrogate_fastSigmoid_LR': LCNSpikingHybrid2(3, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex37_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L4_surrogate_fastSigmoid': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+	}
+	cycleThroughModels(device, models, nEpochs=100)
+
+	models = {
+		# 'ex37_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L3_surrogate_fastSigmoid_LR': LCNSpikingHybrid2(3, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex37_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L4_surrogate_fastSigmoid': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+	}
+	cycleThroughModels(device, models, nEpochs=100, dataType='Delta')
+
+	# # lr scheduling
+	# models = {
+	# 	'ex36_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L4_surrogate_fastSigmoid_LR': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+	# }
+	# cycleThroughModels(device, models, nEpochs=100)
+
+	# # lr scheduling
+	# models = {
+	# 	'ex36_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L4_surrogate_fastSigmoid_LR': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+	# }
+	# cycleThroughModels(device, models, nEpochs=100, dataType='Delta')
+	# """
 	# *************************************************************************
 
 if __name__ == "__main__":
@@ -947,14 +1010,7 @@ if __name__ == "__main__":
 
 # TODO experiments.py
 """
-
-	LCNChannelStack
-
 	nSteps vary (ex 12 didn't work, need to globally change nSteps in data.py)
-
-	spike and LCN regularization
-
-	keep thresholds at one (init them to one)
 """
 
 # TODO models.py
