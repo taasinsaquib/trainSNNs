@@ -7,6 +7,7 @@ from   torchvision import transforms
 from snntorch import surrogate
 
 import matplotlib.pyplot as plt
+from   matplotlib.ticker import MaxNLocator
 
 from models import LCN, LCNSpiking, LCNSpikingHybrid, LCNSpikingHybrid2, ShallowNN, LCNChannelStack, FC
 from data import ONVData, RateEncodeData, CopyRedChannel
@@ -196,10 +197,13 @@ def plotAngles(testName, modelDictNames, e, s=0):
 
 	plt.show()
 
+from matplotlib.pyplot import figure
 
-def plotOri(testName, modelDictNames, e, s=0, metric='Ori'):
 
-	f, axarr = plt.subplots(2, sharex=True)
+def plotOri(testName, modelDictNames, e, s=0, metric='Ori', goodNames=[]):
+
+	f, axarr = plt.subplots(2, sharex=True, figsize=(6, 10), dpi=80)
+	# f, axarr = plt.subplots(1, sharex=True, figsize=(10, 10), dpi=80)
 	# f.suptitle(testName)
 
 	metricName = 'Orientation'
@@ -212,13 +216,21 @@ def plotOri(testName, modelDictNames, e, s=0, metric='Ori'):
 		metricName = 'Acceleration'
 		units = 'degrees/s^2'
 
-	axarr[0].set_title(f'Theta {metricName}')
-	axarr[0].set_xlabel('Time')
-	axarr[0].set_ylabel(f'{units}')
+	axarr[0].set_title(f'Theta', fontsize=24)
+	axarr[0].set_ylabel(f'{units}', fontsize=20)
+	axarr[0].tick_params(axis='y', which='major', labelsize=20)
+	axarr[0].xaxis.set_major_locator(MaxNLocator(integer=True))
 
-	axarr[1].set_title(f'Phi {metricName}')
-	axarr[1].set_xlabel('Time')
-	axarr[1].set_ylabel(f'{units}')
+	axarr[1].set_title(f'Phi', fontsize=24)
+	axarr[1].set_xlabel('Time', fontsize=20)
+	axarr[1].set_ylabel(f'{units}', fontsize=20)
+	axarr[1].tick_params(axis='y', which='major', labelsize=20)
+	axarr[1].xaxis.set_major_locator(MaxNLocator(integer=True))
+
+	# # axarr.set_title(f'Theta')
+	# axarr.set_xlabel('Time', fontsize=20)
+	# axarr.set_ylabel(f'{units}', fontsize=20)
+	# axarr.xaxis.set_major_locator(MaxNLocator(integer=True))
 
 	time = np.arange(s, e)
 
@@ -236,6 +248,9 @@ def plotOri(testName, modelDictNames, e, s=0, metric='Ori'):
 		l, = axarr[1].plot(time, yLabels, marker='.', c='black')
 		l.set_label('Actual')
 
+		# l, = axarr.plot(time, xLabels, marker='.', c='black')
+		# l.set_label('Actual')
+
 	for i, modelDictName in enumerate(modelDictNames):
 
 		angles = np.genfromtxt(f'C:/Users/taasi/Desktop/trainSNNs/verifyModels/{testName}/{modelDictName}/output{metric}Leye.csv', delimiter=',')[s:e]
@@ -245,17 +260,28 @@ def plotOri(testName, modelDictNames, e, s=0, metric='Ori'):
 
 		# l, = axarr[0].plot(time, xAngles, marker='.', c=colors[modelDictName])
 		l, = axarr[0].plot(time, xAngles, marker='.')
-		l.set_label(modelDictName)
+		# l, = axarr.plot(time, xAngles, marker='.')
+		if len(goodNames) > 0:
+			l.set_label(goodNames[i])
+		else:
+			l.set_label(modelDictName)
 		
 		# Y
 		yAngles = angles[:, 0:1]
 
-		# l, = axarr[1].plot(time, yAngles, marker='.', c=colors[modelDictName])
+		# # l, = axarr[1].plot(time, yAngles, marker='.', c=colors[modelDictName])
 		l, = axarr[1].plot(time, yAngles, marker='.')
-		l.set_label(modelDictName)
+		if len(goodNames) > 0:
+			l.set_label(goodNames[i])
+		else:
+			l.set_label(modelDictName)
 
-	axarr[0].legend()
-	axarr[1].legend()
+	axarr[0].legend(fontsize=20)
+	axarr[1].legend(fontsize=20)
+	# axarr.legend(fontsize=20)
+
+	plt.xticks(fontsize=18)
+	plt.yticks(fontsize=18)
 
 	plt.show()
 
@@ -312,13 +338,19 @@ def main():
 	testName = 'projectile_sideways'
 	convertCSVtoNpy(f'C:/Users/taasi/Desktop/trainSNNs/verifyModels/{testName}', 'actual_smooth.csv', f'labels_{testName}.npy')
 
+	goodNames = ['SNN', 'LiNet']
+
 	# SMOOTH LATERAL
 	"""
 	testName = 'smooth_lateral'
 
-	models = ['FC_normal', 'LCN_normal', 'LCN_normal_lr', 'LCN_delta', 'LCN_delta_lr']
-	models += ['LCNSpikingHybrid_L1_delta', 'LCNSpikingHybrid_L1_normal', 'LCNSpikingHybrid_L2_normal', 'LCNSpikingHybrid_L2_delta']
-	models += ['LCNSpikingHybrid_L3_delta', 'LCNSpikingHybrid_L3_normal', 'LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid_L4_delta']
+	# models = ['FC_normal', 'LCN_normal', 'LCN_normal_lr', 'LCN_delta', 'LCN_delta_lr']
+	# models += ['LCNSpikingHybrid_L1_delta', 'LCNSpikingHybrid_L1_normal', 'LCNSpikingHybrid_L2_normal', 'LCNSpikingHybrid_L2_delta']
+	# models += ['LCNSpikingHybrid_L3_delta', 'LCNSpikingHybrid_L3_normal', 'LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid_L4_delta']
+
+	models = ['LCN_normal', 'LCN_delta']
+	models += ['LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid_L4_delta']
+	models += ['LCNSpikingHybrid2_L4_normal', 'LCNSpikingHybrid2_L4_delta']
 
 	for m in models:
 		folder = f'C:/Users/taasi/Desktop/trainSNNs/verifyModels/{testName}/{m}'
@@ -329,27 +361,34 @@ def main():
 	# plotAngles(testName, ['LCNSpikingHybrid_L1_normal', 'LCNSpikingHybrid_L4_normal'], 400)
 	# plotAngles(testName, ['LCN_delta', 'LCNSpikingHybrid_L1_delta', 'LCNSpikingHybrid_L4_delta'], 400)
 
+	# plotAngles(testName, ['FC_normal', 'LCN_normal'], 400)
 
-	plotAngles(testName, ['FC_normal', 'LCN_normal'], 400)
+	# plotAngles(testName, ['LCN_normal', 'LCN_delta'], 400)
 
-	plotAngles(testName, ['LCN_normal', 'LCN_delta'], 400)
+	# plotAngles(testName, ['LCN_normal', 'LCN_normal_lr'], 400)
+	# plotAngles(testName, ['LCN_delta', 'LCN_delta_lr'], 400)
 
-	plotAngles(testName, ['LCN_normal', 'LCN_normal_lr'], 400)
-	plotAngles(testName, ['LCN_delta', 'LCN_delta_lr'], 400)
+	# plotAngles(testName, ['LCN_normal', 'LCNSpikingHybrid_L1_normal', 'LCNSpikingHybrid_L2_normal', 'LCNSpikingHybrid_L3_normal', 'LCNSpikingHybrid_L4_normal'], 400)
+	# plotAngles(testName, ['LCN_delta', 'LCNSpikingHybrid_L1_delta', 'LCNSpikingHybrid_L2_delta', 'LCNSpikingHybrid_L3_delta', 'LCNSpikingHybrid_L4_delta'], 400)
 
-	plotAngles(testName, ['LCN_normal', 'LCNSpikingHybrid_L1_normal', 'LCNSpikingHybrid_L2_normal', 'LCNSpikingHybrid_L3_normal', 'LCNSpikingHybrid_L4_normal'], 400)
-	plotAngles(testName, ['LCN_delta', 'LCNSpikingHybrid_L1_delta', 'LCNSpikingHybrid_L2_delta', 'LCNSpikingHybrid_L3_delta', 'LCNSpikingHybrid_L4_delta'], 400)
+	# thesis
+	plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 400, 0, goodNames=goodNames)
+	plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 400, 0, goodNames=goodNames)
 	"""
 
 	# SMOOTH
-	"""
+	# """
 	testName = 'smooth'
 
-	models = ['FC_normal', 'LCN_normal', 'LCN_delta']
-	models += ['LCNSpikingHybrid_L1_delta', 'LCNSpikingHybrid_L1_normal', 'LCNSpikingHybrid_L2_normal', 'LCNSpikingHybrid_L2_delta']
-	models += ['LCNSpikingHybrid_L3_delta', 'LCNSpikingHybrid_L3_normal', 'LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid_L4_delta']
-	models += ['LCN_normal', 'LCNSpiking_L3_normal', 'LCNSpiking_L4_normal']
-	models += ['LCN_delta', 'LCNSpiking_L3_delta', 'LCNSpiking_L4_delta']
+	# models = ['FC_normal', 'LCN_normal', 'LCN_delta']
+	# models += ['LCNSpikingHybrid_L1_delta', 'LCNSpikingHybrid_L1_normal', 'LCNSpikingHybrid_L2_normal', 'LCNSpikingHybrid_L2_delta']
+	# models += ['LCNSpikingHybrid_L3_delta', 'LCNSpikingHybrid_L3_normal', 'LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid_L4_delta']
+	# models += ['LCN_normal', 'LCNSpiking_L3_normal', 'LCNSpiking_L4_normal']
+	# models += ['LCN_delta', 'LCNSpiking_L3_delta', 'LCNSpiking_L4_delta']
+
+	models = ['LCN_normal', 'LCN_delta']
+	models += ['LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid_L4_delta']
+	models += ['LCNSpikingHybrid2_L4_normal', 'LCNSpikingHybrid2_L4_delta']
 
 	for m in models:
 		folder = f'C:/Users/taasi/Desktop/trainSNNs/verifyModels/{testName}/{m}'
@@ -369,28 +408,45 @@ def main():
 	# plotOri(testName, ['LCN_normal', 'LCNSpikingHybrid_L1_normal', 'LCNSpikingHybrid_L2_normal', 'LCNSpikingHybrid_L3_normal', 'LCNSpikingHybrid_L4_normal'], 470)
 	# plotOri(testName, ['LCN_delta', 'LCNSpikingHybrid_L1_delta', 'LCNSpikingHybrid_L2_delta', 'LCNSpikingHybrid_L3_delta', 'LCNSpikingHybrid_L4_delta'], 470)
 
-	plotAngles(testName, ['LCNSpikingHybrid_L4_normal', 'LCN_normal'], 400)
-	plotAngles(testName, ['LCNSpikingHybrid_L4_delta', 'LCN_delta'], 400)
+	# slides
+	# plotAngles(testName, ['LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 470)
+	# plotAngles(testName, ['LCNSpikingHybrid_L4_delta', 'LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 470)
 
-	plotOri(testName, ['LCNSpikingHybrid_L4_normal', 'LCN_normal'], 400)
-	plotOri(testName, ['LCNSpikingHybrid_L4_delta', 'LCN_delta'], 400)
+	# plotOri(testName, ['LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 470)
+	# plotOri(testName, ['LCNSpikingHybrid_L4_delta', 'LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 470)
 
-	plotAngles(testName, ['LCNSpiking_L4_normal', 'LCN_normal'], 400)
-	plotAngles(testName, ['LCNSpiking_L4_delta', 'LCN_delta'], 400)
+	# Results
+	# plotAngles(testName, ['LCNSpikingHybrid_L4_normal', 'LCN_normal'], 400)
+	# plotAngles(testName, ['LCNSpikingHybrid_L4_delta', 'LCN_delta'], 400)
 
-	plotOri(testName, ['LCNSpiking_L4_normal', 'LCN_normal'], 400)
-	plotOri(testName, ['LCNSpiking_L4_delta', 'LCN_delta'], 400)
-	"""
+	# plotOri(testName, ['LCNSpikingHybrid_L4_normal', 'LCN_normal'], 400)
+	# plotOri(testName, ['LCNSpikingHybrid_L4_delta', 'LCN_delta'], 400)
+
+	# plotAngles(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 400)
+	# plotAngles(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 400)
+
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 400)
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 400)
+
+	# thesis
+	plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 470, 0, goodNames=goodNames)
+	plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 470, 0, goodNames=goodNames)
+
+	# """
 
 	# SACCADE
-	"""
+	# """
 	testName = 'saccade'
 
+	# models = ['LCN_normal', 'LCN_delta']
+	# models += ['LCNSpikingHybrid_L1_delta', 'LCNSpikingHybrid_L1_normal', 'LCNSpikingHybrid_L2_normal', 'LCNSpikingHybrid_L2_delta']
+	# models += ['LCNSpikingHybrid_L3_delta', 'LCNSpikingHybrid_L3_normal', 'LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid_L4_delta']
+	# models += ['LCN_normal', 'LCNSpiking_L3_normal', 'LCNSpiking_L4_normal']
+	# models += ['LCN_delta', 'LCNSpiking_L3_delta', 'LCNSpiking_L4_delta']
+
 	models = ['LCN_normal', 'LCN_delta']
-	models += ['LCNSpikingHybrid_L1_delta', 'LCNSpikingHybrid_L1_normal', 'LCNSpikingHybrid_L2_normal', 'LCNSpikingHybrid_L2_delta']
-	models += ['LCNSpikingHybrid_L3_delta', 'LCNSpikingHybrid_L3_normal', 'LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid_L4_delta']
-	models += ['LCN_normal', 'LCNSpiking_L3_normal', 'LCNSpiking_L4_normal']
-	models += ['LCN_delta', 'LCNSpiking_L3_delta', 'LCNSpiking_L4_delta']
+	models += ['LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid_L4_delta']
+	models += ['LCNSpikingHybrid2_L4_normal', 'LCNSpikingHybrid2_L4_delta']
 
 	for m in models:
 		folder = f'C:/Users/taasi/Desktop/trainSNNs/verifyModels/{testName}/{m}'
@@ -417,19 +473,52 @@ def main():
 	# plotAngles(testName, ['LCN_delta', 'LCNSpiking_L3_delta', 'LCNSpiking_L4_delta'], 75, 25)
 
 
+	# slides
+	# plotAngles(testName, ['LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 185)
+	# plotAngles(testName, ['LCNSpikingHybrid_L4_delta', 'LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 185)
+
+	# plotOri(testName, ['LCNSpikingHybrid_L4_normal', 'LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 185)
+	# plotOri(testName, ['LCNSpikingHybrid_L4_delta', 'LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 185)
+
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 75, 25)
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 75, 25)
+
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 75, 25, 'Vel')
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 75, 25, 'Vel')
+
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 75, 25, 'Acc')
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 75, 25, 'Acc')
+
+
 	# 3 Comparisons
-	# plotOri(testName, ['LCNSpiking_L4_normal', 'LCN_normal'], 75, 25)
-	# plotOri(testName, ['LCNSpiking_L4_delta', 'LCN_delta'], 75, 25)
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 75, 25)
+	# # plotOri(testName, ['LCNSpikingHybrid_L4_normal', 'LCN_normal'], 75, 25)
 	# plotOri(testName, ['LCNSpikingHybrid_L4_delta', 'LCN_delta'], 75, 25)
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 75, 25)
 
-	plotOri(testName, ['LCNSpiking_L4_normal', 'LCN_normal'], 50, 40, 'Vel')
-	plotOri(testName, ['LCNSpiking_L4_delta', 'LCN_delta'], 50, 40, 'Vel')
-	plotOri(testName, ['LCNSpikingHybrid_L4_delta', 'LCN_delta'], 50, 40, 'Vel')
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 50, 40, 'Vel')
+	# plotOri(testName, ['LCNSpikingHybrid_L4_delta', 'LCN_delta'], 50, 40, 'Vel')
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 50, 40, 'Vel')
 
-	plotOri(testName, ['LCNSpiking_L4_normal', 'LCN_normal'], 50, 40, 'Acc')
-	plotOri(testName, ['LCNSpiking_L4_delta', 'LCN_delta'], 50, 40, 'Acc')
-	plotOri(testName, ['LCNSpikingHybrid_L4_delta', 'LCN_delta'], 50, 40, 'Acc')
-	"""
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 50, 40, 'Acc')
+	# plotOri(testName, ['LCNSpikingHybrid_L4_delta', 'LCN_delta'], 50, 40, 'Acc')
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 50, 40, 'Acc')
+
+
+	# thesis
+	plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 185, 0, goodNames=goodNames)
+	plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 185, 0, goodNames=goodNames)
+
+	# # human comparisons
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 60, 40, goodNames=goodNames)
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 60, 40, goodNames=goodNames)
+
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 50, 40, 'Vel', goodNames=goodNames)
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 50, 40, 'Vel', goodNames=goodNames)
+
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_normal', 'LCN_normal'], 50, 40, 'Acc', goodNames=goodNames)
+	# plotOri(testName, ['LCNSpikingHybrid2_L4_delta', 'LCN_delta'], 50, 40, 'Acc', goodNames=goodNames)
+	# """
 
 
 	# PROJECTILE FORWARD
@@ -580,62 +669,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-
-
-"""
-(snn) C:\\Users\taasi\\Desktop\trainSNNs>python verifyModels.py
-Data shape: (25001, 14400), Labels shape: (25001, 2)
-Mean [ 9.32550039e-20 -5.58197809e-18]
-STD [1. 1.]
-Splits: [20001.  2500.  2500.], n: 25001, adjustment: 0.0
-ex37_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L3_surrogate_fastSigmoid
-0.5
-98.08
-0.1
-52.52
-0.01
-1.1199999999999999
-0.001
-0.0
-0.0001
-0.0
-ex37_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L4_surrogate_fastSigmoid
-0.5
-98.4
-0.1
-45.800000000000004
-0.01
-0.8
-0.001
-0.0
-0.0001
-0.0
-
-(snn) C:\\Users\taasi\\Desktop\trainSNNs>python verifyModels.py
-Data shape: (25002, 14400), Labels shape: (25002, 2)
-Mean [-2.17586306e-19 -1.03020455e-18]
-STD [1. 1.]
-Splits: [20002.  2500.  2500.], n: 25002, adjustment: 0.0
-ex37_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L3_surrogate_fastSigmoid
-0.5
-98.24000000000001
-0.1
-53.52
-0.01
-0.64
-0.001
-0.0
-0.0001
-0.0
-ex37_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L4_surrogate_fastSigmoid
-0.5
-98.76
-0.1
-56.08
-0.01
-1.3599999999999999
-0.001
-0.0
-0.0001
-0.0
-"""

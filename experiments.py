@@ -30,7 +30,8 @@ def cycleThroughModels(device, models, nEpochs=1, dataType='', f=1, nSteps=nStep
 	data, labels = scaleDownData(data, labels, f)
 	dataNormal = generateDataloaders(data, labels)
 
-	rate    = RateEncodeData(nSteps, 2, 0)
+	# rate    = RateEncodeData(nSteps, 2, 0)
+	rate    = RateEncodeData(nSteps, 1, 0)
 	# latency = LatencyEncodeData(nSteps, 5, 0.01)
 	# spikeLabels = CopyEncodeLabels(nSteps)
 	rgb = CopyRedChannel()
@@ -41,7 +42,7 @@ def cycleThroughModels(device, models, nEpochs=1, dataType='', f=1, nSteps=nStep
 
 	# Train
 	for name, m in models.items():
-		print(f'Training: {name}')
+		print(f'Training: {name}') 
 
 		if rateGain != None:
 			rate    = RateEncodeData(nSteps, rateGain[name], 0)
@@ -903,18 +904,18 @@ def main():
 	# Ex 34: RGB LCN **********************************************************
 	"""
 	models = {
-		'ex34_LCN_normal_20epoch_k15_RGB_f5': LCN(43200, 2, 15, 5, 5, True),
-		'ex34_LCN_normal_20epoch_k20_RGB_f5': LCN(43200, 2, 20, 5, 5, True),
-		'ex34_LCN_normal_20epoch_k25_RGB_f5': LCN(43200, 2, 25, 5, 5, True),
+		# 'ex34_LCN_normal_20epoch_k15_RGB_f5': LCN(43200, 2, 15, 5, 5, True),
+		# 'ex34_LCN_normal_20epoch_k20_RGB_f5': LCN(43200, 2, 20, 5, 5, True),
+		'ex34_LCN_normal_100epoch_k25': LCN(43200, 2, 25, 5, 5, True),
 	}
-	cycleThroughModels(device, models, nEpochs=20)
+	cycleThroughModels(device, models, nEpochs=100)
 
 	models = {
-		'ex34_LCN_delta_20epoch_k15_RGB_f5': LCN(43200, 2, 15, 5, 5, True),
-		'ex34_LCN_delta_20epoch_k20_RGB_f5': LCN(43200, 2, 20, 5, 5, True),
-		'ex34_LCN_delta_20epoch_k25_RGB_f5': LCN(43200, 2, 25, 5, 5, True),
+		# 'ex34_LCN_delta_20epoch_k15_RGB_f5': LCN(43200, 2, 15, 5, 5, True),
+		# 'ex34_LCN_delta_20epoch_k20_RGB_f5': LCN(43200, 2, 20, 5, 5, True),
+		'ex34_LCN_delta_100epoch_k25': LCN(43200, 2, 25, 5, 5, True),
 	}
-	cycleThroughModels(device, models, nEpochs=20, dataType='Delta')
+	cycleThroughModels(device, models, nEpochs=100, dataType='Delta')
 	"""
 	# *************************************************************************
 
@@ -981,13 +982,13 @@ def main():
 	# """
 	models = {
 		# 'ex37_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L3_surrogate_fastSigmoid_LR': LCNSpikingHybrid2(3, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
-		'ex37_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L4_surrogate_fastSigmoid': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex37_LCNSpikingHybrid2_spiking_normal_100epoch_k25_L4_surrogate_fastSigmoid_gain1': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
 	}
 	cycleThroughModels(device, models, nEpochs=100)
 
 	models = {
 		# 'ex37_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L3_surrogate_fastSigmoid_LR': LCNSpikingHybrid2(3, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
-		'ex37_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L4_surrogate_fastSigmoid': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
+		'ex37_LCNSpikingHybrid2_spiking_delta_100epoch_k25_L4_surrogate_fastSigmoid_gain1': LCNSpikingHybrid2(4, 43200, 2, 25, 5, 5, 0, 1, True, spikeGrad=fastSigmoid),
 	}
 	cycleThroughModels(device, models, nEpochs=100, dataType='Delta')
 

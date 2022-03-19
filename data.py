@@ -7,6 +7,12 @@ from   torch.utils.data import Dataset, TensorDataset, random_split
 from   torchvision import transforms
 
 from   snntorch import spikegen
+from   snntorch.spikevision import spikedata
+
+from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
+import snntorch.spikeplot as splt
+from IPython.display import HTML
 
 # *******************************************
 # Constants
@@ -298,15 +304,29 @@ def main():
 	# 	time.sleep(0.1)
 	# 	"""
 
+	"""
 	rgb = CopyRedChannel()
-
 	x = np.ones(10)
-
 	print(x.shape)
-
 	x = rgb(x)
-
 	print(x.shape)	
+	"""
+
+	train_ds = spikedata.NMNIST("C:/Users/taasi/Downloads", train=True, num_steps=150, dt=2000)
+	train_dl = DataLoader(train_ds, shuffle=True, batch_size=64)
+
+	# choose a random sample
+	n = 40000
+
+	# index into a single sample and sum the on/off channels
+	a = (train_dl.dataset[n][0][:, 0] + train_dl.dataset[n][0][:, 1])
+
+	#  Plot
+	fig, ax = plt.subplots()
+	anim = splt.animator(a, fig, ax, interval=10)
+	HTML(anim.to_html5_video())
+
+	anim.save('nmnist_animator.mp4', writer = 'ffmpeg', fps=50)
 
 if __name__ == "__main__":
 	main()
